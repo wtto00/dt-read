@@ -7,6 +7,5 @@ export default {
     navigationBarBackgroundColor: '#fff',
     navigationBarTitleText: 'WeChat',
     navigationBarTextStyle: 'black'
-  },
-  cloud: true
+  }
 }
