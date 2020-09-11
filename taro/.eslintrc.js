@@ -1,3 +1,6 @@
-module.exports = {
-  'extends': ['taro/react']
-}
+export default {
+  extends: ["taro/react"],
+  rules: {
+    "jsx-quotes": ["error", "prefer-double"],
+  },
+};
