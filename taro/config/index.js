@@ -1,70 +1,87 @@
+import * as path from 'path';
+import prodConfig from "./prod";
+import devConfig from "./dev";
+
 const config = {
-  projectName: 'dt-read',
-  date: '2020-9-11',
+  projectName: "dt-read",
+  date: "2020-9-11",
   designWidth: 750,
   deviceRatio: {
     640: 2.34 / 2,
     750: 1,
-    828: 1.81 / 2
+    828: 1.81 / 2,
   },
-  sourceRoot: 'src',
-  outputRoot: 'dist',
+  sourceRoot: "src",
+  outputRoot: "dist",
   plugins: [],
-  defineConstants: {
-  },
+  defineConstants: {},
   copy: {
-    patterns: [
-    ],
-    options: {
-    }
+    patterns: [],
+    options: {},
   },
-  framework: 'react',
+  framework: "react",
   mini: {
     postcss: {
       pxtransform: {
         enable: true,
-        config: {
-
-        }
+        config: {},
       },
       url: {
         enable: true,
         config: {
-          limit: 1024 // 设定转换尺寸上限
-        }
+          limit: 1024, // 设定转换尺寸上限
+        },
       },
       cssModules: {
-        enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
+        enable: true, // 默认为 false，如需使用 css modules 功能，则设为 true
         config: {
-          namingPattern: 'module', // 转换模式，取值为 global/module
-          generateScopedName: '[name]__[local]___[hash:base64:5]'
-        }
-      }
-    }
+          namingPattern: "module", // 转换模式，取值为 global/module
+          generateScopedName: "[name]__[local]___[hash:base64:5]",
+        },
+      },
+    },
   },
   h5: {
-    publicPath: '/',
-    staticDirectory: 'static',
+    publicPath: "/",
+    staticDirectory: "static",
     postcss: {
       autoprefixer: {
         enable: true,
-        config: {
-        }
+        config: {},
       },
       cssModules: {
-        enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
+        enable: true, // 默认为 false，如需使用 css modules 功能，则设为 true
         config: {
-          namingPattern: 'module', // 转换模式，取值为 global/module
-          generateScopedName: '[name]__[local]___[hash:base64:5]'
-        }
-      }
-    }
-  }
-}
+          namingPattern: "module", // 转换模式，取值为 global/module
+          generateScopedName: "[name]__[local]___[hash:base64:5]",
+        },
+      },
+    },
+    webpackChain(chain) {
+      chain.merge({
+        plugin: {
+          install: {
+            plugin: require("copy-webpack-plugin"),
+            args: [
+              {
+                patterns: [
+                  {
+                    from: path.resolve(__dirname, "../public"),
+                    to: path.resolve(__dirname, "../dist"),
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      });
+    },
+  },
+};
 
-module.exports = function (merge) {
-  if (process.env.NODE_ENV === 'development') {
-    return merge({}, config, require('./dev'))
+export default function (merge) {
+  if (process.env.NODE_ENV === "development") {
+    return merge({}, config, devConfig);
   }
-  return merge({}, config, require('./prod'))
+  return merge({}, config, prodConfig);
 }
