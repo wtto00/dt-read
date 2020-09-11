@@ -1,15 +1,29 @@
 import React, { Component } from 'react'
-import { View, Text } from '@tarojs/components'
-import { AtButton } from 'taro-ui'
+import { connect } from 'react-redux'
+import { View, Button, Text } from '@tarojs/components'
 
-import "taro-ui/dist/style/components/button.scss" // 按需引入
+import { add, minus, asyncAdd } from '../../actions/counter'
+
 import './index.scss'
 
-export default class Index extends Component {
 
-  componentWillMount () { }
-
-  componentDidMount () { }
+@connect(({ counter }) => ({
+  counter
+}), (dispatch) => ({
+  add () {
+    dispatch(add())
+  },
+  dec () {
+    dispatch(minus())
+  },
+  asyncAdd () {
+    dispatch(asyncAdd())
+  }
+}))
+class Index extends Component {
+  componentWillReceiveProps (nextProps) {
+    console.log(this.props, nextProps)
+  }
 
   componentWillUnmount () { }
 
@@ -20,13 +34,15 @@ export default class Index extends Component {
   render () {
     return (
       <View className='index'>
-        <Text>Hello world!</Text>
-        <AtButton type='primary'>I need Taro UI</AtButton>
-        <Text>Taro UI 支持 Vue 了吗？</Text>
-        <AtButton type='primary' circle={true}>支持</AtButton>
-        <Text>共建？</Text>
-        <AtButton type='secondary' circle={true}>来</AtButton>
+        <Button className='add_btn' onClick={this.props.add}>+</Button>
+        <Button className='dec_btn' onClick={this.props.dec}>-</Button>
+        <Button className='dec_btn' onClick={this.props.asyncAdd}>async</Button>
+        <View><Text>{this.props.counter.num}</Text></View>
+        <View><Text>Hello, World</Text></View>
       </View>
     )
   }
 }
+
+export default Index
+
