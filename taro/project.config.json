@@ -2,7 +2,7 @@
   "miniprogramRoot": "./dist",
   "projectname": "dt-read",
   "description": "免费无广告小说阅读器",
-  "appid": "touristappid",
+  "appid": "wx58311362dbfc378d",
   "setting": {
     "urlCheck": true,
     "es6": false,
