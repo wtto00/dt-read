@@ -3,8 +3,8 @@
     <view
       class="wt-images-uploader-item"
       :class="`column${columNum}`"
-      :style="{ paddingRight: `${spaceBetween}px`, marginBottom: `${spaceBetween}px` }"
-      v-for="img in images"
+      :style="itemStyle"
+      v-for="(img, index) in images"
       :key="img.key"
     >
       <image class="placeholder-image" src="./1px.png" mode="widthFix" />
@@ -12,17 +12,21 @@
         class="wt-images-uploader-item-body"
         :mode="imgMode"
         :src="img.file ? img.file.path : img.url"
-        :style="{ paddingRight: `${spaceBetween}px`, ...imgStyle }"
+        @click="tapImg(index)"
       />
+      <view class="loading-mask" v-if="uploadingMask === 'imgMask' && loading[img.key]">
+        <uni-icons class="loading-spinner" color="#eee" size="30" type="spinner-cycle" />
+      </view>
+      <uni-icons class="delete-icon" :type="delBtn.icon" color="#f00" :style="delBtn.style" @click="removeImg(index)" />
     </view>
     <view
       v-if="mode === 'upload' && images.length < maxCount"
       class="wt-images-uploader-item"
       :class="`column${columNum}`"
-      :style="{ paddingRight: `${spaceBetween}px`, marginBottom: `${spaceBetween}px` }"
+      :style="itemStyle"
     >
       <image class="placeholder-image" src="./1px.png" mode="widthFix" />
-      <view class="wt-images-uploader-item-body" :style="{ paddingRight: `${spaceBetween}px` }">
+      <view class="wt-images-uploader-item-body">
         <slot name="select-button">
           <view class="select-button" hover-class="opcity" :style="selectBtn.btnSty" @click="selectImg">
             <uni-icons class="select-button-icon" :type="selectBtn.icon" :style="selectBtn.iconSty" />
@@ -31,10 +35,29 @@
         </slot>
       </view>
     </view>
+
+    <uni-popup ref="loadingDialog" :maskClick="false">
+      <view class="loading-popup">
+        <view class="loading-popup-title">图片上传中...</view>
+        <view class="loading-popup-row" v-for="(img, index) in uploadingImages" :key="img.key">
+          <text class="loading-popup-row-label">第{{ index + 1 }}张</text>
+          <progress class="loading-popup-row-progress" :percent="progress[img.key]" show-info activeColor="#6c9" />
+        </view>
+      </view>
+    </uni-popup>
+
+    <uni-popup ref="popupMessage" type="message">
+      <uni-popup-message type="warning" :message="message" />
+    </uni-popup>
   </view>
 </template>
 
 <script>
+const trimPath = (path) => {
+  const trimedPath = path.replace(/^\/+|\/+$/g, '');
+  return trimedPath ? `/${trimedPath}` : '';
+};
+
 export default {
   name: 'wt-images-uploader',
   props: {
@@ -42,11 +65,11 @@ export default {
     mode: {
       type: String,
       default: 'upload',
-      validator: (value) => ['upload', 'show'].indexOf(value) !== -1
+      validator: (value) => ['upload', 'show'].indexOf(value) !== -1,
     },
     // 最大上传数量
     maxCount: { type: [Number, String], default: 9 },
-    // 列数 每行显示几个图片
+    // 列数 每行显示几个图片 支持1-5列
     columNum: { type: [Number, String], default: 3 },
     // 单张图片大小限制  0不限制 单位KB
     overSize: { type: [Number, String], default: 0 },
@@ -55,7 +78,7 @@ export default {
     // 否开启自动上传
     autoUpload: { type: Boolean, default: false },
     // 多图传入图片url数组
-    imgList: { type: Array, default: () => [] },
+    value: { type: Array, default: () => [] },
     // 图片显示模式  aspectFill 默认值
     imgMode: { type: String, default: 'aspectFill' },
     // 是否异步上传 默认false为同步
@@ -64,13 +87,13 @@ export default {
     tapModel: {
       type: String,
       default: 'none',
-      validator: (value) => ['none', 'preview', 'replace'].indexOf(value) !== -1
+      validator: (value) => ['none', 'preview', 'replace'].indexOf(value) !== -1,
     },
-    // 上传时遮罩模式  imgMask图片遮罩   uniLoading uniapp的loading  dialogList模态框列表 
+    // 上传时遮罩模式  imgMask图片遮罩   uniLoading uniapp的loading  dialogList模态框列表
     uploadingMask: {
       type: String,
       default: 'uniLoading',
-      validator: (value) => ['imgMask', 'uniLoading', 'dialogList'].indexOf(value) !== -1
+      validator: (value) => ['imgMask', 'uniLoading', 'dialogList'].indexOf(value) !== -1,
     },
     // 图片显示样式
     imgStyle: { type: Object, default: () => ({}) },
@@ -82,76 +105,218 @@ export default {
         textSty: null,
         icon: 'plusempty',
         iconSty: null,
-        btnSty: null
-      })
+        btnSty: null,
+      }),
     },
     // 图片删除按钮样式
     delBtn: {
       type: Object,
       default: () => ({
-        icon: 'icon-roundclosefill',
-        style: { top: '-20rpx' }
-      })
+        icon: 'clear',
+        style: {},
+      }),
     },
     // 上传文件所在路径 前后不要加'/'
-    uploadPath: { type: String, default: '' }
+    uploadPath: { type: String, default: '' },
   },
   data() {
-    const images = this.imgList.map(item => ({ url: item, key: Math.random() }));
     return {
-      images,
-      loading: images.reduce((sum, item) => ({ ...sum, [item.key]: false }), {}),
-    }
+      uploadingImages: [],
+      loading: {},
+      progress: {},
+      message: '',
+    };
+  },
+  computed: {
+    itemStyle() {
+      return {
+        width: `calc(${100 / this.columNum}% - ${(this.spaceBetween * (this.columNum - 1)) / this.columNum}px)`,
+        marginRight: `${this.spaceBetween}px`,
+        marginBottom: `${this.spaceBetween}px`,
+      };
+    },
+    images: {
+      get() {
+        return this.value.map((item) => {
+          return typeof item === 'string' ? { url: item, key: Math.random() } : item;
+        });
+      },
+      set(val) {
+        this.$emit('input', val);
+      },
+    },
   },
   methods: {
-    selectImg() {
+    selectImg({ success, count = this.maxCount - this.images.length }) {
       uni.chooseImage({
-        count: this.maxCount - this.images.length,
-        success: res => {
+        count,
+        success: (res) => {
           let files = [];
-          const overSize = Number(this.overSize) * 1024
-          res.tempFiles.forEach(item => {
-            if (!overSize || (overSize && item.size < overSize)) {
+          const overSize = Number(this.overSize) * 1024;
+          let count = 0;
+          res.tempFiles.forEach((item) => {
+            if (!overSize || (overSize && item.size <= overSize)) {
               files.push({
                 file: item,
                 key: Math.random(),
-              })
+              });
+            } else if (overSize && item.size > overSize) {
+              // 超过大小
+              count += 1;
             }
-          })
-          this.images.push(...files)
-          if (this.autoUpload) this.uploadImgs(files)
+          });
+          if (count > 0) {
+            let _unit = '';
+            if (overSize / 1024 < 1024) {
+              _unit = overSize / 1024 + 'KB';
+            } else {
+              _unit = overSize / (1024 * 1024) + 'MB';
+            }
+            this.message = '图片不能超过' + _unit;
+            this.$refs.popupMessage.open();
+          }
+          if (success) {
+            success(files);
+          } else {
+            this.images.push(...files);
+            if (this.autoUpload) this.uploadImgs(files);
+          }
         },
         fail: () => {
-          uni.showToast({ title: '选择图片出错了' })
-        }
-      })
+          uni.showToast({ title: '选择图片出错了' });
+        },
+      });
     },
     uploadImgs(files = this.images) {
-      const waitUploadImages = files.files(item => !item.url)
+      this.uploadingImages = files.filter((item) => !item.url);
+      if (this.uploadingImages.length === 0) return;
+      this.showLoading();
+      let count = 0;
+      const errors = [];
+      if (this.isAsync) {
+        // 异步
+        this.uploadingImages.forEach((file) => {
+          this.uploadImg(file)
+            .then(() => {})
+            .catch(() => {
+              errors.push(file.key);
+            })
+            .finally(() => {
+              count += 1;
+              if (count === this.uploadingImages.length) {
+                // 上传完毕
+                this.hideLoading();
+                if (errors.length > 0) {
+                  // 有上传失败的
+                  uni.showToast({ title: `${errors.length}张图片上传失败` });
+                  // 上传失败自动删除已选择的文件
+                  this.removeImgs(errors);
+                }
+              }
+            });
+        });
+      } else {
+        // 同步
+        this.uploadImgsSync(files, count, errors);
+      }
     },
-    showLoading(key) {
-      if (this.uploadingMask === 'uniLoading') {
-        if (this.isAsync) {
-          // 异步
-          uni.showLoading({ title: '正在上传' })
-        } else {
-          // 同步
-          const img = this.images.find(item => item.key === key)
-          if (img) {
-            uni.showLoading({ title: '正在上传' + img.file.name })
+    async uploadImgsSync(files, count, errors) {
+      // 同步上传
+      this.uploadImg(files[count])
+        .then(() => {})
+        .catch(() => {
+          errors.push(file.key);
+        })
+        .finally(() => {
+          if (count + 1 === files.length) {
+            // 上传完毕
+            this.hideLoading();
+            if (errors.length > 0) {
+              // 有上传失败的
+              uni.showToast({ title: `${errors.length}张图片上传失败` });
+              // 上传失败自动删除已选择的文件
+              this.removeImgs(errors);
+            }
           } else {
-            uni.showLoading({ title: '正在上传' })
+            this.uploadImgsSync(files, count + 1, errors);
           }
-        }
-      } else if (this.uploadingMask === 'imgMask') {
-        const img = this.images.find(item => item.key === key)
-        if (img) {
-          this.loading[img.key] = true
-        }
-      } else if (this.uploadingMask === 'dialogList') { }
+        });
     },
-  }
-}
+    uploadImg({ file, key }) {
+      // 文档 https://uniapp.dcloud.io/uniCloud/storage?id=uploadfile
+      return new Promise((resolve, reject) => {
+        this.setLoading(key, true);
+        uniCloud
+          .uploadFile({
+            filePath: file.path,
+            cloudPath: `${trimPath(this.uploadPath)}/${file.name}`,
+            fileType: 'image',
+            onUploadProgress: (progressEvent) => {
+              this.$set(this.progress, key, Math.round((progressEvent.loaded * 100) / progressEvent.total));
+            },
+          })
+          .then((res) => {
+            if (res.success) {
+              const index = this.images.findIndex((img) => img.key === key);
+              if (index > -1) {
+                this.images[index].url = res.fileID;
+              }
+              resolve(res);
+            } else {
+              reject(res);
+            }
+          })
+          .catch((res) => {
+            reject(res);
+          })
+          .finally(() => {
+            this.setLoading(key, false);
+          });
+      });
+    },
+    showLoading() {
+      if (this.uploadingMask === 'uniLoading') {
+        uni.showLoading({ title: '正在上传...' });
+      } else if (this.uploadingMask === 'dialogList') {
+        this.$refs.loadingDialog.open();
+      }
+    },
+    hideLoading() {
+      if (this.uploadingMask === 'uniLoading') {
+        uni.hideLoading();
+      } else if (this.uploadingMask === 'dialogList') {
+        this.$refs.loadingDialog.close();
+      }
+    },
+    setLoading(key, loading = false) {
+      if (this.uploadingMask === 'imgMask' || this.uploadingMask === 'dialogList') {
+        this.$set(this.loading, key, loading);
+      }
+    },
+    tapImg(index) {
+      if (this.tapModel === 'preview') {
+        uni.previewImage({
+          current: index,
+          urls: this.images.map((item) => (item.file ? item.file.path : item.url)),
+        });
+      } else if (this.tapModel === 'replace') {
+        this.selectImg({
+          count: 1,
+          success: (files) => {
+            this.$set(this.images, index, files[0]);
+            if (this.autoUpload) this.uploadImgs(files);
+          },
+        });
+      }
+    },
+    removeImg(index) {
+      this.images.splice(index, 1);
+    },
+    removeImgs(keys) {
+      this.images = this.images.filter((img) => !keys.includes(img.key));
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
@@ -162,11 +327,7 @@ export default {
   display: flex;
   flex-wrap: wrap;
   &-item {
-    width: 0;
-    max-width: 33.33%;
-    flex: 1;
     position: relative;
-    box-sizing: border-box;
     &-body {
       position: absolute;
       width: 100%;
@@ -188,6 +349,81 @@ export default {
         &-text {
           font-size: 28rpx;
         }
+      }
+    }
+    .loading-mask {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(#000, 0.6);
+      .loading-spinner {
+        animation: rotate 3s linear infinite;
+      }
+    }
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .delete-icon {
+      position: absolute;
+      font-size: 36rpx;
+      top: -18rpx;
+      right: -18rpx;
+    }
+    &.column1 {
+      &:nth-of-type(n) {
+        margin-right: 0 !important;
+      }
+    }
+    &.column2 {
+      &:nth-of-type(2n) {
+        margin-right: 0 !important;
+      }
+    }
+    &.column3 {
+      &:nth-of-type(3n) {
+        margin-right: 0 !important;
+      }
+    }
+    &.column4 {
+      &:nth-of-type(4n) {
+        margin-right: 0 !important;
+      }
+    }
+    &.column5 {
+      &:nth-of-type(5n) {
+        margin-right: 0 !important;
+      }
+    }
+  }
+  .loading-popup {
+    width: 90vw;
+    background-color: #fff;
+    border-radius: 10rpx;
+    padding: 20rpx;
+    &-title {
+      font-weight: bold;
+      margin-bottom: 10rpx;
+    }
+    &-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20rpx;
+      &-label {
+        margin-right: 20rpx;
+        font-size: 30rpx;
+      }
+      &-progress {
+        flex: 1;
       }
     }
   }

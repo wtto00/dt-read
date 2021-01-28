@@ -5,17 +5,12 @@
       <text class="feedback-quick" @tap="chooseMsg">快速键入</text>
     </view>
     <view class="feedback-body">
-      <textarea
-        placeholder="请详细描述你的问题和意见..."
-        v-model="sendDate.content"
-        class="feedback-textarea"
-      ></textarea>
+      <textarea placeholder="请详细描述你的问题和意见..." v-model="sendDate.content" class="feedback-textarea"></textarea>
     </view>
 
-    <view class="feedback-title"><text>图片(选填,提供问题截图,总大小10M以下)</text></view>
+    <view class="feedback-title"><text>图片(选填,提供问题截图,图片大小2M以下)</text></view>
     <view class="feedback-body feedback-uploader">
-      <hl-upload-img :max-count="5" isAsync :over-size="2048" auto-upload path="feedback" :img-list="imageList" />
-      <wt-images-uploader />
+      <wt-images-uploader v-model="imageList" :max-count="9" isAsync :over-size="2048" auto-upload uploadPath="feedback" />
       <!-- <view class="uni-uploader">
         <view class="uni-uploader-head">
           <view class="uni-uploader-title">点击预览图片</view>
@@ -47,14 +42,14 @@ export default {
       sendDate: {
         score: 0,
         content: '',
-        contact: ''
-      }
+        contact: '',
+      },
     };
   },
   methods: {
-    chooseMsg() { }
-  }
-}
+    chooseMsg() {},
+  },
+};
 </script>
 
 <style lang="scss" scoped>
@@ -73,7 +68,7 @@ export default {
     &:after {
       font-family: uniicons;
       font-size: 40rpx;
-      content: "\e581";
+      content: '\e581';
       position: absolute;
       right: 0;
       top: 50%;
