@@ -13,19 +13,21 @@
       "style": {
         "navigationBarTitleText": "个人中心"
       }
-    },    // #ifndef APP-PLUS || MP-WEIXIN || MP-QQ
+    },
+    // #ifndef APP-PLUS || MP-WEIXIN || MP-QQ
     {
       "path": "pages/feedback/feedback",
       "style": {
         "navigationBarTitleText": "意见反馈",
         "enablePullDownRefresh": false
       }
-    }    // #endif
+    }
+    // #endif
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "DT阅读",
-    "navigationBarBackgroundColor": "#6cc",
+    "navigationBarBackgroundColor": "#6c9",
     "backgroundColor": "#F8F8F8",
     "maxWidth": 768,
     "rpxCalcMaxDeviceWidth": 768,
@@ -33,7 +35,7 @@
   },
   "tabBar": {
     "color": "#cdcdcd",
-    "selectedColor": "#66CCCC",
+    "selectedColor": "#6c9",
     "list": [
       // icon https://www.iconfont.cn/collections/detail?spm=a313x.7781069.0.da5a778a4&cid=12910
       {
