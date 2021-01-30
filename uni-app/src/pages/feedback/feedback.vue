@@ -1,94 +1,115 @@
 <template>
-  <view class="feedback">
-    <view class="feedback-title">
-      <text>问题和意见</text>
-      <text class="feedback-quick" @tap="chooseMsg">快速键入</text>
-    </view>
-    <view class="feedback-body">
-      <textarea placeholder="请详细描述你的问题和意见..." v-model="sendDate.content" class="feedback-textarea"></textarea>
+  <view class="container tui-padding">
+    <view class="tui-title">问题和意见</view>
+    <view class="tui-textarea-box">
+      <textarea
+        class="tui-textarea"
+        v-model="sendDate.content"
+        placeholder="请详细描述你的问题和意见..."
+        maxlength="500"
+        placeholder-class="tui-phcolor-color"
+      />
+      <view class="tui-textarea-counter">0/500</view>
     </view>
 
-    <view class="feedback-title"><text>图片(选填,提供问题截图,图片大小2M以下)</text></view>
-    <view class="feedback-body feedback-uploader">
-      <wt-images-uploader v-model="imageList" :max-count="9" isAsync :over-size="2048" auto-upload uploadPath="feedback" />
-      <!-- <view class="uni-uploader">
-        <view class="uni-uploader-head">
-          <view class="uni-uploader-title">点击预览图片</view>
-          <view class="uni-uploader-info">{{ imageList.length }}/5</view>
-        </view>
-        <view class="uni-uploader-body">
-          <view class="uni-uploader__files">
-            <block v-for="(image, index) in imageList" :key="index">
-              <view class="uni-uploader__file" style="position: relative">
-                <image class="uni-uploader__img" :src="image" @tap="previewImage(index)"></image>
-                <view class="close-view" @click="close(index)">x</view>
-              </view>
-            </block>
-            <view class="uni-uploader__input-box" v-show="imageList.length < 5"
-              ><view class="uni-uploader__input" @tap="chooseImg"></view
-            ></view>
-          </view>
-        </view>
-      </view> -->
+    <view class="tui-title">图片(选填,提供问题截图,图片大小2M以下)</view>
+    <view class="tui-upload-box">
+      <wt-images-uploader
+        v-model="imageList"
+        columNum="4"
+        :max-count="9"
+        :over-size="2048"
+        isAsync
+        uploadPath="feedback"
+      />
+    </view>
+
+    <view class="tui-title">QQ/邮箱</view>
+    <view class="tui-input-border">
+      <input
+        class="tui-input"
+        v-model="sendDate.contact"
+        placeholder="选填,方便我们联系你"
+        placeholder-class="tui-phcolor"
+      />
+    </view>
+
+    <view class="tui-title">应用评分</view>
+    <tui-rate :size="30" :current="sendDate.score" @change="({ index }) => (sendDate.score = index)"></tui-rate>
+
+    <view class="tui-title">
+      <tui-button type="primary" :disabled="disabled" @tap="send">提交</tui-button>
     </view>
   </view>
 </template>
 
 <script>
+import { getPlatform } from '@/static/js/util';
+
 export default {
   data() {
     return {
       imageList: [],
       sendDate: {
+        platform: getPlatform(),
         score: 0,
         content: '',
         contact: '',
       },
     };
   },
+  computed: {
+    disabled() {
+      const { content } = this.sendDate;
+      if (!content.trim()) return true;
+      return false;
+    },
+  },
+  onLoad() {
+    uni.getSystemInfo({
+      success: (res) => {
+        // 平台
+        this.sendDate.p = res.platform;
+        // 设备型号
+        this.sendDate.md = res.model;
+        // 系统
+        this.sendDate.os = res.system;
+      },
+    });
+  },
   methods: {
-    chooseMsg() {},
+    send() {
+      console.log('send');
+      uni.showLoading({ title: '加载中' });
+    },
   },
 };
 </script>
 
 <style lang="scss" scoped>
-.feedback {
-  &-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20rpx;
-    color: #8f8f94;
-    font-size: 28rpx;
-  }
-  &-quick {
-    position: relative;
-    padding-right: 40rpx;
-    &:after {
-      font-family: uniicons;
-      font-size: 40rpx;
-      content: '\e581';
-      position: absolute;
-      right: 0;
-      top: 50%;
-      color: #bbb;
-      transform: translateY(-50%);
-    }
-  }
-  &-body {
-    background: #fff;
-  }
-  &-textarea {
-    height: 200rpx;
-    font-size: 34rpx;
-    line-height: 50rpx;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 20rpx 30rpx 0;
-  }
-  &-uploader {
-    padding: 22rpx 20rpx;
-  }
+.container {
+  padding: 30rpx 0 80rpx 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.tui-padding {
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.tui-title {
+  padding: 30rpx 0;
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+}
+.tui-top40 {
+  margin-top: 40rpx;
+}
+.tui-pl-30 {
+  padding-left: 30rpx;
+}
+.feedback-submit {
+  margin-top: 30rpx;
 }
 </style>

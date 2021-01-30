@@ -3,15 +3,15 @@
     <view class="head">
       <image v-if="hasLogin && userInfo.avatar" class="avatar" :src="userInfo.avatar" />
       <image v-else class="avatar" src="@/static/images/my/mine_def_touxiang_3x.png" />
-      <view class="user-name">{{ hasLogin && userInfo.email ? userInfo.email : "点击前去登录" }}</view>
+      <view class="user-name">{{ hasLogin && userInfo.email ? userInfo.email : '点击前去登录' }}</view>
     </view>
 
     <view class="middle">
-      <view class="middle-item" hover-class="opcity" :hover-stay-time="150" @click="previewReward">
+      <view class="middle-item" hover-class="tui-opcity" :hover-stay-time="150" @click="previewReward">
         <image class="middle-item-img" src="@/static/images/my/reward.png" />
         <text class="middle-item-label">赞赏</text>
       </view>
-      <view class="middle-item" hover-class="opcity" :hover-stay-time="150" @click="goFeedback">
+      <view class="middle-item" hover-class="tui-opcity" :hover-stay-time="150" @click="goFeedback">
         <!-- #ifdef APP-PLUS || MP-WEIXIN || MP-QQ -->
         <button open-type="feedback" class="middle-item-feedback"></button>
         <!-- #endif -->
@@ -30,22 +30,22 @@ export default {
     return {};
   },
   computed: {
-    ...mapState(['hasLogin', 'userInfo'])
+    ...mapState(['hasLogin', 'userInfo']),
   },
   methods: {
     previewReward() {
       uni.previewImage({
-        urls: ['https://vkceyugu.cdn.bspapp.com/VKCEYUGU-dt-read/dabc7300-5d8c-11eb-bdc1-8bd33eb6adaa.png']
-      })
+        urls: ['https://vkceyugu.cdn.bspapp.com/VKCEYUGU-dt-read/dabc7300-5d8c-11eb-bdc1-8bd33eb6adaa.png'],
+      });
     },
     goFeedback() {
       // #ifndef APP-PLUS || MP-WEIXIN || MP-QQ
       uni.navigateTo({
-        url: '/pages/feedback/feedback'
-      })
+        url: '/pages/feedback/feedback',
+      });
       // #endif
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -53,7 +53,7 @@ export default {
 .container {
   .head {
     height: 440rpx;
-    background-image: url("~@/static/images/my/mine_bg.png");
+    background-image: url('~@/static/images/my/mine_bg.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

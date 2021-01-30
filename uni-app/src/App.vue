@@ -1,24 +1,22 @@
 <script>
 export default {
-  onLaunch: function () {
-    console.log('App Launch')
+  onLaunch: function() {
+    console.log('App Launch');
   },
-  onShow: function () {
-    console.log('App Show')
+  onShow: function() {
+    console.log('App Show');
   },
-  onHide: function () {
-    console.log('App Hide')
-  }
-}
+  onHide: function() {
+    console.log('App Hide');
+  },
+};
 </script>
 
 <style>
 /*每个页面公共css */
+@import '~@/static/css/thorui.css';
+
 page {
-  background: #fafafa;
   font-size: 32rpx;
-}
-.opcity {
-  opacity: 0.5;
 }
 </style>

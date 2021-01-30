@@ -15,9 +15,9 @@
         @click="tapImg(index)"
       />
       <view class="loading-mask" v-if="uploadingMask === 'imgMask' && loading[img.key]">
-        <uni-icons class="loading-spinner" color="#eee" size="30" type="spinner-cycle" />
+        <tui-icon class="loading-spinner" color="#eee" :size="30" name="loading"></tui-icon>
       </view>
-      <uni-icons class="delete-icon" :type="delBtn.icon" color="#f00" :style="delBtn.style" @click="removeImg(index)" />
+      <tui-icon class="delete-icon" color="#f00" :name="delBtn.icon" :style="delBtn.style" @click="removeImg(index)"></tui-icon>
     </view>
     <view
       v-if="mode === 'upload' && images.length < maxCount"
@@ -28,37 +28,42 @@
       <image class="placeholder-image" src="./1px.png" mode="widthFix" />
       <view class="wt-images-uploader-item-body">
         <slot name="select-button">
-          <view class="select-button" hover-class="opcity" :style="selectBtn.btnSty" @click="selectImg">
-            <uni-icons class="select-button-icon" :type="selectBtn.icon" :style="selectBtn.iconSty" />
+          <view class="select-button" hover-class="tui-opcity" :style="selectBtn.btnSty" @click="selectImg">
+            <tui-icon class="select-button-icon" color="#000" :name="selectBtn.icon" :style="selectBtn.iconSty"></tui-icon>
             <text class="select-button-text" :style="selectBtn.textSty">{{ selectBtn.text }}</text>
           </view>
         </slot>
       </view>
     </view>
 
-    <uni-popup ref="loadingDialog" :maskClick="false">
-      <view class="loading-popup">
-        <view class="loading-popup-title">图片上传中...</view>
-        <view class="loading-popup-row" v-for="(img, index) in uploadingImages" :key="img.key">
-          <text class="loading-popup-row-label">第{{ index + 1 }}张</text>
-          <progress class="loading-popup-row-progress" :percent="progress[img.key]" show-info activeColor="#6c9" />
-        </view>
+    <tui-modal
+      v-if="uploadingMask === 'dialogList'"
+      custom
+      :show="showUploadingModal"
+      width="90%"
+      :maskClosable="false"
+      @cancel="showUploadingModal = false"
+    >
+      <view class="loading-popup-title">图片上传中...</view>
+      <view class="loading-popup-row" v-for="(img, index) in uploadingImages" :key="img.key">
+        <text class="loading-popup-row-label">第{{ index + 1 }}张</text>
+        <progress class="loading-popup-row-progress" :percent="progress[img.key]" show-info activeColor="#6cc" />
       </view>
-    </uni-popup>
+    </tui-modal>
 
-    <uni-popup ref="popupMessage" type="message">
-      <uni-popup-message type="warning" :message="message" />
-    </uni-popup>
+    <tui-tips ref="popupMessage"></tui-tips>
   </view>
 </template>
 
 <script>
+import tuiModal from '../tui-modal/tui-modal.vue';
 const trimPath = (path) => {
   const trimedPath = path.replace(/^\/+|\/+$/g, '');
   return trimedPath ? `/${trimedPath}` : '';
 };
 
 export default {
+  components: { tuiModal },
   name: 'wt-images-uploader',
   props: {
     // 组件模式:upload上传 show展示
@@ -103,7 +108,7 @@ export default {
       default: () => ({
         text: '上传图片',
         textSty: null,
-        icon: 'plusempty',
+        icon: 'plus',
         iconSty: null,
         btnSty: null,
       }),
@@ -112,7 +117,7 @@ export default {
     delBtn: {
       type: Object,
       default: () => ({
-        icon: 'clear',
+        icon: 'close-fill',
         style: {},
       }),
     },
@@ -121,6 +126,7 @@ export default {
   },
   data() {
     return {
+      showUploadingModal: false,
       uploadingImages: [],
       loading: {},
       progress: {},
@@ -145,6 +151,10 @@ export default {
         this.$emit('input', val);
       },
     },
+    overSizeUnit() {
+      if (this.overSize < 1024) return this.overSize + 'KB';
+      return this.overSize / 1024 + 'MB';
+    },
   },
   methods: {
     selectImg({ success, count = this.maxCount - this.images.length }) {
@@ -166,19 +176,16 @@ export default {
             }
           });
           if (count > 0) {
-            let _unit = '';
-            if (overSize / 1024 < 1024) {
-              _unit = overSize / 1024 + 'KB';
-            } else {
-              _unit = overSize / (1024 * 1024) + 'MB';
-            }
-            this.message = '图片不能超过' + _unit;
-            this.$refs.popupMessage.open();
+            this.$refs.popupMessage.showTips({
+              type: 'warning',
+              msg: '图片不能超过' + this.overSizeUnit,
+            });
           }
           if (success) {
             success(files);
           } else {
             this.images.push(...files);
+            this.$forceUpdate();
             if (this.autoUpload) this.uploadImgs(files);
           }
         },
@@ -278,14 +285,16 @@ export default {
       if (this.uploadingMask === 'uniLoading') {
         uni.showLoading({ title: '正在上传...' });
       } else if (this.uploadingMask === 'dialogList') {
-        this.$refs.loadingDialog.open();
+        this.showUploadingModal = true;
+        // this.$refs.loadingDialog.open();
       }
     },
     hideLoading() {
       if (this.uploadingMask === 'uniLoading') {
         uni.hideLoading();
       } else if (this.uploadingMask === 'dialogList') {
-        this.$refs.loadingDialog.close();
+        this.showUploadingModal = false;
+        // this.$refs.loadingDialog.close();
       }
     },
     setLoading(key, loading = false) {
@@ -311,9 +320,11 @@ export default {
     },
     removeImg(index) {
       this.images.splice(index, 1);
+      this.$forceUpdate();
     },
     removeImgs(keys) {
       this.images = this.images.filter((img) => !keys.includes(img.key));
+      this.$forceUpdate();
     },
   },
 };
@@ -324,6 +335,7 @@ export default {
   width: 100%;
 }
 .wt-images-uploader {
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   &-item {
