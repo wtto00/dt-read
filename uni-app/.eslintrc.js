@@ -7,6 +7,7 @@ module.exports = {
     uni: 'readonly',
     wx: 'readonly',
     getCurrentPages: 'readonly',
+    uniCloud: 'readonly',
   },
   extends: ['plugin:vue/essential', '@vue/airbnb'],
   parserOptions: {
@@ -18,7 +19,7 @@ module.exports = {
     'object-curly-newline': ['error', { ImportDeclaration: { multiline: true } }],
     'implicit-arrow-linebreak': ['error', 'beside'],
     'operator-linebreak': [2, 'before', { overrides: { '?': 'before' } }],
-    'max-len': ['error', { code: 120, ignoreUrls: true }],
+    'max-len': ['error', { code: 130, ignoreUrls: true }],
     'arrow-parens': ['error', 'as-needed', { requireForBlockBody: true }],
     'arrow-body-style': ['error', 'as-needed'],
     'no-bitwise': ['error', { allow: ['~'] }],

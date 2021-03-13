@@ -14,24 +14,12 @@
 
     <view class="tui-title">图片(选填,提供问题截图,图片大小2M以下)</view>
     <view class="tui-upload-box">
-      <wt-images-uploader
-        v-model="imageList"
-        columNum="4"
-        :max-count="9"
-        :over-size="2048"
-        isAsync
-        uploadPath="feedback"
-      />
+      <wt-images-uploader v-model="imageList" columNum="4" :max-count="9" :over-size="2048" isAsync uploadPath="feedback" />
     </view>
 
     <view class="tui-title">QQ/邮箱</view>
     <view class="tui-input-border">
-      <input
-        class="tui-input"
-        v-model="sendDate.contact"
-        placeholder="选填,方便我们联系你"
-        placeholder-class="tui-phcolor"
-      />
+      <input class="tui-input" v-model="sendDate.contact" placeholder="选填,方便我们联系你" placeholder-class="tui-phcolor" />
     </view>
 
     <view class="tui-title">应用评分</view>
@@ -44,7 +32,7 @@
 </template>
 
 <script>
-import { getPlatform } from '@/static/js/util';
+import { getPlatform } from '@/common/util';
 
 export default {
   data() {
@@ -79,7 +67,6 @@ export default {
   },
   methods: {
     send() {
-      console.log('send');
       uni.showLoading({ title: '加载中' });
     },
   },

@@ -14,9 +14,9 @@
         :src="img.file ? img.file.path : img.url"
         @click="tapImg(index)"
       />
-      <view class="loading-mask" v-if="uploadingMask === 'imgMask' && loading[img.key]">
-        <tui-icon class="loading-spinner" color="#eee" :size="30" name="loading"></tui-icon>
-      </view>
+      <view class="loading-mask" v-if="uploadingMask === 'imgMask' && loading[img.key]"
+        ><tui-icon class="loading-spinner" color="#eee" :size="30" name="loading"></tui-icon
+      ></view>
       <tui-icon class="delete-icon" color="#f00" :name="delBtn.icon" :style="delBtn.style" @click="removeImg(index)"></tui-icon>
     </view>
     <view
@@ -57,6 +57,7 @@
 
 <script>
 import tuiModal from '../tui-modal/tui-modal.vue';
+
 const trimPath = (path) => {
   const trimedPath = path.replace(/^\/+|\/+$/g, '');
   return trimedPath ? `/${trimedPath}` : '';
@@ -70,7 +71,7 @@ export default {
     mode: {
       type: String,
       default: 'upload',
-      validator: (value) => ['upload', 'show'].indexOf(value) !== -1,
+      validator: value => ['upload', 'show'].indexOf(value) !== -1,
     },
     // 最大上传数量
     maxCount: { type: [Number, String], default: 9 },
@@ -92,13 +93,13 @@ export default {
     tapModel: {
       type: String,
       default: 'none',
-      validator: (value) => ['none', 'preview', 'replace'].indexOf(value) !== -1,
+      validator: value => ['none', 'preview', 'replace'].indexOf(value) !== -1,
     },
     // 上传时遮罩模式  imgMask图片遮罩   uniLoading uniapp的loading  dialogList模态框列表
     uploadingMask: {
       type: String,
       default: 'uniLoading',
-      validator: (value) => ['imgMask', 'uniLoading', 'dialogList'].indexOf(value) !== -1,
+      validator: value => ['imgMask', 'uniLoading', 'dialogList'].indexOf(value) !== -1,
     },
     // 图片显示样式
     imgStyle: { type: Object, default: () => ({}) },
@@ -143,17 +144,15 @@ export default {
     },
     images: {
       get() {
-        return this.value.map((item) => {
-          return typeof item === 'string' ? { url: item, key: Math.random() } : item;
-        });
+        return this.value.map(item => (typeof item === 'string' ? { url: item, key: Math.random() } : item));
       },
       set(val) {
         this.$emit('input', val);
       },
     },
     overSizeUnit() {
-      if (this.overSize < 1024) return this.overSize + 'KB';
-      return this.overSize / 1024 + 'MB';
+      if (this.overSize < 1024) return `${this.overSize}KB`;
+      return `${this.overSize / 1024}MB`;
     },
   },
   methods: {
@@ -161,9 +160,9 @@ export default {
       uni.chooseImage({
         count,
         success: (res) => {
-          let files = [];
+          const files = [];
           const overSize = Number(this.overSize) * 1024;
-          let count = 0;
+          let num = 0;
           res.tempFiles.forEach((item) => {
             if (!overSize || (overSize && item.size <= overSize)) {
               files.push({
@@ -172,13 +171,13 @@ export default {
               });
             } else if (overSize && item.size > overSize) {
               // 超过大小
-              count += 1;
+              num += 1;
             }
           });
-          if (count > 0) {
+          if (num > 0) {
             this.$refs.popupMessage.showTips({
               type: 'warning',
-              msg: '图片不能超过' + this.overSizeUnit,
+              msg: `图片不能超过${this.overSizeUnit}`,
             });
           }
           if (success) {
@@ -195,7 +194,7 @@ export default {
       });
     },
     uploadImgs(files = this.images) {
-      this.uploadingImages = files.filter((item) => !item.url);
+      this.uploadingImages = files.filter(item => !item.url);
       if (this.uploadingImages.length === 0) return;
       this.showLoading();
       let count = 0;
@@ -232,7 +231,7 @@ export default {
       this.uploadImg(files[count])
         .then(() => {})
         .catch(() => {
-          errors.push(file.key);
+          errors.push(files[count].key);
         })
         .finally(() => {
           if (count + 1 === files.length) {
@@ -264,7 +263,7 @@ export default {
           })
           .then((res) => {
             if (res.success) {
-              const index = this.images.findIndex((img) => img.key === key);
+              const index = this.images.findIndex(img => img.key === key);
               if (index > -1) {
                 this.images[index].url = res.fileID;
               }
@@ -306,7 +305,7 @@ export default {
       if (this.tapModel === 'preview') {
         uni.previewImage({
           current: index,
-          urls: this.images.map((item) => (item.file ? item.file.path : item.url)),
+          urls: this.images.map(item => (item.file ? item.file.path : item.url)),
         });
       } else if (this.tapModel === 'replace') {
         this.selectImg({
@@ -323,7 +322,7 @@ export default {
       this.$forceUpdate();
     },
     removeImgs(keys) {
-      this.images = this.images.filter((img) => !keys.includes(img.key));
+      this.images = this.images.filter(img => !keys.includes(img.key));
       this.$forceUpdate();
     },
   },

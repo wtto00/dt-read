@@ -21,17 +21,25 @@
         "navigationBarTitleText": "意见反馈",
         "enablePullDownRefresh": false
       }
-    }
+    }, 
     // #endif
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "",
+        "enablePullDownRefresh": false
+      }
+
+    }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "DT阅读",
     "navigationBarBackgroundColor": "#6cc",
-    "backgroundColor": "#F8F8F8",
-    "maxWidth": 768,
+    "backgroundColor": "#F8F8F8"    // #ifdef H5
+    ,"maxWidth": 768,
     "rpxCalcMaxDeviceWidth": 768,
-    "rpxCalcBaseDeviceWidth": 768
+    "rpxCalcBaseDeviceWidth": 768    //  #endif
   },
   "tabBar": {
     "color": "#cdcdcd",

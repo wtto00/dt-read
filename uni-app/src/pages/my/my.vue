@@ -1,9 +1,9 @@
 <template>
   <view class="container">
-    <view class="head">
+    <view class="head" style="background-image:url(../../static/images/my/mine_bg.png)">
       <image v-if="hasLogin && userInfo.avatar" class="avatar" :src="userInfo.avatar" />
       <image v-else class="avatar" src="@/static/images/my/mine_def_touxiang_3x.png" />
-      <view class="user-name">{{ hasLogin && userInfo.email ? userInfo.email : '点击前去登录' }}</view>
+      <view class="user-name">{{ showUserName }}</view>
     </view>
 
     <view class="middle">
@@ -31,6 +31,10 @@ export default {
   },
   computed: {
     ...mapState(['hasLogin', 'userInfo']),
+    showUserName() {
+      if (!this.hasLogin) return '点击前去登录';
+      return this.userInfo.name || this.userInfo.email;
+    },
   },
   methods: {
     previewReward() {
@@ -53,7 +57,6 @@ export default {
 .container {
   .head {
     height: 440rpx;
-    background-image: url('~@/static/images/my/mine_bg.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

@@ -1,20 +1,17 @@
 <script>
 export default {
-  onLaunch: function() {
-    console.log('App Launch');
+  onLaunch() {
+    // #ifdef MP-WEIXIN
+    // #endif
   },
-  onShow: function() {
-    console.log('App Show');
-  },
-  onHide: function() {
-    console.log('App Hide');
-  },
+  onShow() {},
+  onHide() {},
 };
 </script>
 
 <style>
 /*每个页面公共css */
-@import '~@/static/css/thorui.css';
+@import '~@/common/thorui.css';
 
 page {
   font-size: 32rpx;
